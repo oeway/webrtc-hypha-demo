@@ -22,4 +22,6 @@ python -m http.server 9000
 ```
 
 
+Then visit http://localhost:9000/index.html to start streaming.
+
 
