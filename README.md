@@ -16,12 +16,5 @@ Start the server:
 python server.py --service-id=my-video-stream
 ```
 
-Now start a dev server for serving the webpage:
-```
-python -m http.server 9000
-```
-
-
-Then visit http://localhost:9000/index.html to start streaming, before you connect, please fill in the correct service id of your server (in this example, it should be `my-video-stream`).
-
+Then visit the URL printed in the console, e.g. https://oeway.github.io/webrtc-hypha-demo/?service_id=my-video-stream .
 
