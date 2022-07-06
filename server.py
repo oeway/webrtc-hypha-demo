@@ -117,7 +117,7 @@ async def start_service(service_id, workspace=None, token=None):
     print(
         f"Service (client_id={client_id}, service_id={service_id}) started successfully, available at https://ai.imjoy.io/{server.config.workspace}/services"
     )
-    print(f"You can access the stream https://oeway.github.io/webrtc-hypha-demo/?service_id={service_id}")
+    print(f"You can access the webrtc stream at https://oeway.github.io/webrtc-hypha-demo/?service_id={service_id}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
