@@ -115,6 +115,13 @@
 <pre id="answer-sdp"></pre>
 
 <script>
+
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+if(urlParams.get('service_id')){
+    document.getElementById('service-id').value = urlParams.get('service_id');
+}
+
 // get DOM elements
 var dataChannelLog = document.getElementById('data-channel'),
     iceConnectionLog = document.getElementById('ice-connection-state'),

@@ -117,12 +117,13 @@ async def start_service(service_id, workspace=None, token=None):
     print(
         f"Service (client_id={client_id}, service_id={service_id}) started successfully, available at https://ai.imjoy.io/{server.config.workspace}/services"
     )
+    print(f"You can access the stream https://oeway.github.io/webrtc-hypha-demo/?service_id={service_id}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="WebRTC demo for video streaming"
     )
-    parser.add_argument("--service-id", type=int, default="aiortc-demo", help="The service id")
+    parser.add_argument("--service-id", type=str, default="aiortc-demo", help="The service id")
     parser.add_argument("--verbose", "-v", action="count")
     args = parser.parse_args()
 
