@@ -30,6 +30,12 @@
 <body>
 
 <h2>Options</h2>
+
+<div class="option">
+<label for="service-id">WebRTC service id: </label>
+<input id="service-id" type="text" value="aiortc-demo"/>
+</div>
+
 <div class="option">
     <input id="use-datachannel" checked="checked" type="checkbox"/>
     <label for="use-datachannel">Use datachannel</label>
@@ -199,8 +205,10 @@ function negotiate() {
 
         document.getElementById('offer-sdp').textContent = offer.sdp;
 
+        const service_id = document.getElementById('service-id').value;
+
         const server = await hyphaWebsocketClient.connectToServer({"name": "js-client", "server_url": "https://ai.imjoy.io", "method_timeout": 10})
-        const svc = await server.getService("aiortc-demo")
+        const svc = await server.getService(service_id)
         const answer = await svc.offer({
             sdp: offer.sdp,
             type: offer.type,

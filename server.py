@@ -95,7 +95,7 @@ async def on_shutdown(app):
 async def start_service(service_id, workspace=None, token=None):
     client_id = service_id + "-client"
     print(f"Starting service...")
-    api = await connect_to_server(
+    server = await connect_to_server(
         {
             "client_id": client_id,
             "server_url": "https://ai.imjoy.io/",
@@ -103,8 +103,8 @@ async def start_service(service_id, workspace=None, token=None):
             "token": token,
         }
     )
-    # print("Workspace: ", workspace, "Token:", await api.generate_token({"expires_in": 3600*24*100}))
-    await api.register_service(
+    # print("Workspace: ", workspace, "Token:", await server.generate_token({"expires_in": 3600*24*100}))
+    await server.register_service(
         {
             "id": service_id,
             "config": {
@@ -115,13 +115,14 @@ async def start_service(service_id, workspace=None, token=None):
         }
     )
     print(
-        f"Service (client_id={client_id}) started successfully, available at https://ai.imjoy.io/{api.config.workspace}/services"
+        f"Service (client_id={client_id}, service_id={service_id}) started successfully, available at https://ai.imjoy.io/{server.config.workspace}/services"
     )
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="WebRTC demo for video streaming"
     )
+    parser.add_argument("--service-id", type=int, default="aiortc-demo", help="The service id")
     parser.add_argument("--verbose", "-v", action="count")
     args = parser.parse_args()
 
@@ -132,7 +133,7 @@ if __name__ == "__main__":
 
     loop = asyncio.get_event_loop()
     loop.create_task(start_service(
-        "aiortc-demo",
+        args.service_id,
         workspace=None,
         token=None,
     ))
