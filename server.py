@@ -54,8 +54,14 @@ async def offer(params, context=None):
     def on_datachannel(channel):
         @channel.on("message")
         def on_message(message):
-            if isinstance(message, str) and message.startswith("ping"):
-                channel.send("pong" + message[4:])
+            if isinstance(message, str):
+                if message.startswith("ping"):
+                    channel.send("pong" + message[4:])
+                elif message in ["right", "left", "up", "down"]:
+                    print(f"===> command received: {message}")
+                    # pc.transport.send(message.encode())
+                    channel.send("completed")
+
 
     @pc.on("connectionstatechange")
     async def on_connectionstatechange():

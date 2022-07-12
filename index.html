@@ -98,12 +98,15 @@
 
 <div id="media" style="display: none">
     <h2>Media</h2>
-    <canvas id="hostCanvas"></canvas>
     <audio id="audio" autoplay="true"></audio>
     <video id="video" autoplay="true" playsinline="true"></video>
 </div>
 
 <h2>Data channel</h2>
+<button onclick="dc.send('left');">←</button>
+<button onclick="dc.send('right')">→</button>
+<button onclick="dc.send('up')">↑</button>
+<button onclick="dc.send('left')">↓</button>
 <pre id="data-channel" style="height: 200px;"></pre>
 
 <h2>SDP</h2>
@@ -296,17 +299,7 @@ function start() {
             document.getElementById('media').style.display = 'block';
         }
 
-        const hostCanvas = document.getElementById('hostCanvas');
-        const ctx = hostCanvas.getContext("2d");
-        ctx.fillStyle = "#FF0000";
-        ctx.fillRect(0,0,150,75);
-        
-        setInterval(()=>{
-            const randomColor = Math.floor(Math.random()*16777215).toString(16);
-            ctx.fillStyle = "#" + randomColor;
-            ctx.fillRect(0,0,150,75);
-        }, 30);
-        
+        const hostCanvas = document.createElement('canvas');
         const stream = hostCanvas.captureStream(10);
         stream.getVideoTracks().forEach(function(track) {
             pc.addTrack(track, stream);
