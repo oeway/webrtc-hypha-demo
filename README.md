@@ -6,7 +6,7 @@ This is a demo repo for showing how to use Hypha as a singaling server, and stre
 
 ## Installation
 ```
-pip install aiortc numpy imjoy-rpc
+pip install aiortc numpy "imjoy-rpc>=0.5.30"
 ```
 
 ## Start

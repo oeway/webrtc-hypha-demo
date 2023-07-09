@@ -1,447 +1,184 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebRTC demo</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.22/vue.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/buefy/dist/buefy.min.css">
-    </link>
-    <script src="https://unpkg.com/buefy/dist/buefy.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.materialdesignicons.com/5.3.45/css/materialdesignicons.min.css">
-    </link>
-    <script src="https://cdn.jsdelivr.net/npm/imjoy-rpc@0.5.6/dist/hypha-rpc-websocket.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/imjoy-rpc@0.5.30/dist/hypha-rpc-websocket.min.js"></script>
     <style>
-        button {
-            padding: 8px 16px;
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
         }
 
-        pre {
-            overflow-x: hidden;
-            overflow-y: auto;
+        #app {
+            padding: 20px;
         }
 
+        #title {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+
+        #media {
+            max-width: 1280px;
+            height: 50vh;
+            position: relative;
+        }
+
+        audio,
         video {
             width: 100%;
             height: 50vh;
         }
 
-        .option {
-            margin-bottom: 8px;
-        }
-
-        #media {
-            max-width: 1280px;
-        }
-    </style>
-
-
-    <style>
-        #app {
-            margin-top: 2px;
-        }
-
         #viewer-section {
-            display: table;
-            margin-top: 5px;
-            max-width: calc(100vh - 32px);
+            max-width: 800px;
+            margin-top: 20px;
         }
 
         .viewer-container {
-            display: table-cell;
             position: relative;
         }
 
-        .field {
-            margin-bottom: .2rem !important;
+        #control-panel {
+            position: absolute;
+            z-index: 10;
+            top: 60px;
+            right: 10px;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+        }
+
+        #control-panel .btn-group {
+            display: flex;
+            justify-content: space-between;
         }
     </style>
-
 </head>
 
 <body>
-
-
     <div id="app">
-
-
-        <nav class="panel" style="padding: 40px;">
-            <p class="title">
-                WebRTC Hypha Demo
-            </p>
-            <section>
-                <div class="option">
-                    <label for="service-id">WebRTC service id: </label>
-                    <input id="service-id" type="text" value="aiortc-demo" />
+        <h1 id="title" class="text-center mb-4">WebRTC Hypha Demo</h1>
+        <div class="form-group">
+            <label for="service-id">WebRTC service id: </label>
+            <input id="service-id" type="text" value="aiortc-demo" class="form-control" />
+        </div>
+        <div class="d-flex justify-content-center mb-3">
+            
+        </div>
+        <div id="viewer-section" class="position-relative">
+            <div id="control-panel" class="d-flex flex-column align-items-center justify-content-center">
+                <button id="startStopButton" class="btn btn-primary" onclick="window.methods.toggleLive()">
+                    <span id="startStopIcon" class="fas fa-play"></span>
+                </button>
+                <br>
+                <button class="btn btn-secondary mb-2" onclick="microscopeControl.move('up')"><i class="fas fa-arrow-up"></i></button>
+                <div class="d-flex justify-content-between">
+                    <button class="btn btn-secondary mr-2" onclick="microscopeControl.move('left')"><i class="fas fa-arrow-left"></i></button>
+                    <button class="btn btn-secondary ml-2" onclick="microscopeControl.move('right')"><i class="fas fa-arrow-right"></i></button>
                 </div>
-            </section>
-            <br>
-            <section>
-                <div class="buttons">
-                    <b-button :loading="waitingConnection" :type="liveRunning?'is-danger': 'is-primary is-light'"
-                        @click="toggleLive()">
-                        {{liveRunning?'Stop Live': 'Start Live'}}</b-button>
-
-                    <!-- &nbsp;Exposure: <b-field>
-            <b-input placeholder="Exposure"
-                size="is-small"
-                @input="mmcore.setExposure(parseFloat(exposure))"
-                v-model="exposure"
-                type="number"
-                min="0"
-                max="10000">
-            </b-input>
-        </b-field>
-        &nbsp;Binning: <b-field>
-            <b-select placeholder="Binning"
-                      size="is-small"
-                      @input="mmcore.setProperty(cameraDevice, 'Binning', binning)"
-                      v-model="binning">
-                <option :value="1">1</option>
-                <option :value="2">2</option>
-                <option :value="4">4</option>
-                <option :value="8">8</option>
-                <option :value="16">16</option>
-            </b-select>
-        </b-field>
-        &nbsp;&nbsp;<b-button size="is-small" @click="showDevicePropertyBrowser()">Device Properties</b-button> -->
-
-                    <b-button size="is-small" @click="send('left');">←</b-button>
-                    <b-button size="is-small" @click="send('right')">→</b-button>
-                    <b-button size="is-small" @click="send('up')">↑</b-button>
-                    <b-button size="is-small" @click="send('down')">↓</b-button>
-                </div>
-
-
-            </section>
-            <section id="viewer-section">
-                <div id="media" style="display: none; height: 50vh;">
-                    <audio id="audio" autoplay="true"></audio>
-                    <video id="video" autoplay="true" playsinline="true"></video>
-                </div>
-            </section>
-        </nav>
-
+                <button class="btn btn-secondary mt-2" onclick="microscopeControl.move('down')"><i class="fas fa-arrow-down"></i></button>
+            </div>
+            <div id="media" class="shadow-lg">
+                <audio id="audio" autoplay="true"></audio>
+                <video id="video" autoplay="true" playsinline="true"></video>
+               
+            </div>
+        </div>
     </div>
 
     <script>
-
-
         const queryString = window.location.search;
         const urlParams = new URLSearchParams(queryString);
+
         if (urlParams.get('service_id')) {
             document.getElementById('service-id').value = urlParams.get('service_id');
         }
 
-        // get DOM elements
-        var dataChannelLog = document.getElementById('data-channel'),
-            iceConnectionLog = document.getElementById('ice-connection-state'),
-            iceGatheringLog = document.getElementById('ice-gathering-state'),
-            signalingLog = document.getElementById('signaling-state');
-
-        // peer connection
-        var pc = null;
-
-        // data channel
-        var dc = null, dcInterval = null;
-
-        // imjoyRPC.setupRPC({name: 'My Awesome App'}).then((api)=>{
-        //     api.alert("hi")
-        // })
-
-
-
-        function createPeerConnection() {
-            var config = {
-                sdpSemantics: 'unified-plan'
-            };
-
-            // if (document.getElementById('use-stun').checked) {
-            config.iceServers = [{ urls: ['stun:stun.l.google.com:19302'] }];
-            // }
-
-            pc = new RTCPeerConnection(config);
-
-            // register some listeners to help debugging
-            pc.addEventListener('icegatheringstatechange', function () {
-                console.log(' -> ' + pc.iceGatheringState)
-            }, false);
-            console.log(pc.iceGatheringState);
-
-            pc.addEventListener('iceconnectionstatechange', function () {
-                console.log(' -> ' + pc.iceConnectionState);
-            }, false);
-            console.log(pc.iceConnectionState);
-
-            pc.addEventListener('signalingstatechange', function () {
-                console.log(' -> ' + pc.signalingState)
-            }, false);
-            console.log(pc.signalingState);
-
-            // connect audio / video
-            pc.addEventListener('track', function (evt) {
-                if (evt.track.kind == 'video')
-                    document.getElementById('video').srcObject = evt.streams[0];
-                else
-                    document.getElementById('audio').srcObject = evt.streams[0];
-            });
-
-            return pc;
-        }
-
-        function negotiate() {
-            return pc.createOffer().then(function (offer) {
-                return pc.setLocalDescription(offer);
-            }).then(function () {
-                // wait for ICE gathering to complete
-                return new Promise(function (resolve) {
-                    if (pc.iceGatheringState === 'complete') {
-                        resolve();
-                    } else {
-                        function checkState() {
-                            if (pc.iceGatheringState === 'complete') {
-                                pc.removeEventListener('icegatheringstatechange', checkState);
-                                resolve();
-                            }
-                        }
-                        pc.addEventListener('icegatheringstatechange', checkState);
-                    }
-                });
-            }).then(async function () {
-                var offer = pc.localDescription;
-                var codec;
-
-                codec = "default" // document.getElementById('audio-codec').value;
-                if (codec !== 'default') {
-                    offer.sdp = sdpFilterCodec('audio', codec, offer.sdp);
-                }
-
-                codec = "default" // document.getElementById('video-codec').value;
-                if (codec !== 'default') {
-                    offer.sdp = sdpFilterCodec('video', codec, offer.sdp);
-                }
-
-                // document.getElementById('offer-sdp').textContent = offer.sdp;
-
-                const service_id = document.getElementById('service-id').value;
-
-                const server = await hyphaWebsocketClient.connectToServer({ "name": "js-client", "server_url": "https://ai.imjoy.io", "method_timeout": 10 })
-                const svc = await server.getService(service_id)
-                const answer = await svc.offer({
-                    sdp: offer.sdp,
-                    type: offer.type,
-                    video_transform: "none" // document.getElementById('video-transform').value
-                })
-                // document.getElementById('answer-sdp').textContent = answer.sdp;
-                return pc.setRemoteDescription(answer);
-
-            }).catch(function (e) {
-                console.error(e)
-                alert(e);
-                throw e;
-            });
-        }
-
-
-
-        function sdpFilterCodec(kind, codec, realSdp) {
-            var allowed = []
-            var rtxRegex = new RegExp('a=fmtp:(\\d+) apt=(\\d+)\r$');
-            var codecRegex = new RegExp('a=rtpmap:([0-9]+) ' + escapeRegExp(codec))
-            var videoRegex = new RegExp('(m=' + kind + ' .*?)( ([0-9]+))*\\s*$')
-
-            var lines = realSdp.split('\n');
-
-            var isKind = false;
-            for (var i = 0; i < lines.length; i++) {
-                if (lines[i].startsWith('m=' + kind + ' ')) {
-                    isKind = true;
-                } else if (lines[i].startsWith('m=')) {
-                    isKind = false;
-                }
-
-                if (isKind) {
-                    var match = lines[i].match(codecRegex);
-                    if (match) {
-                        allowed.push(parseInt(match[1]));
-                    }
-
-                    match = lines[i].match(rtxRegex);
-                    if (match && allowed.includes(parseInt(match[2]))) {
-                        allowed.push(parseInt(match[1]));
-                    }
-                }
+        function assert(condition, message) {
+            if (!condition) {
+                throw new Error(message || "Assertion failed");
             }
+        }
 
-            var skipRegex = 'a=(fmtp|rtcp-fb|rtpmap):([0-9]+)';
-            var sdp = '';
+        let pc;
+        window.methods = {
+            liveRunning: false,
 
-            isKind = false;
-            for (var i = 0; i < lines.length; i++) {
-                if (lines[i].startsWith('m=' + kind + ' ')) {
-                    isKind = true;
-                } else if (lines[i].startsWith('m=')) {
-                    isKind = false;
-                }
+            toggleLive: async function() {
+                const button = document.getElementById('startStopButton');
+                const icon = document.getElementById('startStopIcon');
 
-                if (isKind) {
-                    var skipMatch = lines[i].match(skipRegex);
-                    if (skipMatch && !allowed.includes(parseInt(skipMatch[2]))) {
-                        continue;
-                    } else if (lines[i].match(videoRegex)) {
-                        sdp += lines[i].replace(videoRegex, '$1 ' + allowed.join(' ')) + '\n';
-                    } else {
-                        sdp += lines[i] + '\n';
-                    }
+                if (!this.liveRunning) {
+                    button.classList.remove('btn-primary');
+                    button.classList.add('btn-danger');
+                    icon.classList.remove('fa-play');
+                    icon.classList.add('fa-stop');
+                    button.disabled = true;
+                    await this.start();
+                    button.disabled = false;
                 } else {
-                    sdp += lines[i] + '\n';
+                    button.classList.remove('btn-danger');
+                    button.classList.add('btn-primary');
+                    icon.classList.remove('fa-stop');
+                    icon.classList.add('fa-play');
+                    this.stop();
                 }
-            }
 
-            return sdp;
-        }
-
-        function escapeRegExp(string) {
-            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
-        }
-
-
-
-        const app = new Vue({
-            el: '#app',
-            data: {
-                liveRunning: false,
-                waitingConnection: false,
+                this.liveRunning = !this.liveRunning;
             },
-            methods: {
-                async toggleLive() {
 
-                    if (!this.liveRunning) {
-                        await this.start();
-                    }
-                    else {
-                        this.stop();
-                    }
-                    this.liveRunning = !this.liveRunning
-                },
-                async send(cmd) {
-                    dc.send(cmd);
-                },
-                async start() {
-                    pc = createPeerConnection();
-
-                    var time_start = null;
-
-                    function current_stamp() {
-                        if (time_start === null) {
-                            time_start = new Date().getTime();
-                            return 0;
-                        } else {
-                            return new Date().getTime() - time_start;
-                        }
-                    }
-
-                    // if (document.getElementById('use-datachannel').checked) {
-                    var parameters = { "ordered": true }; //JSON.parse(document.getElementById('datachannel-parameters').value);
-
-                    dc = pc.createDataChannel('chat', parameters);
-                    dc.onclose = function () {
-                        clearInterval(dcInterval);
-                        console.log('- close\n');
-                    };
-                    dc.onopen = function () {
-                        console.log('- open\n');
-                        dcInterval = setInterval(function () {
-                            var message = 'ping ' + current_stamp();
-                            console.log('> ' + message + '\n');
-                            dc.send(message);
-                        }, 1000);
-
-                        dc.send('start');
-                    };
-                    dc.onmessage = function (evt) {
-                        console.log('< ' + evt.data + '\n')
-
-                        if (evt.data.substring(0, 4) === 'pong') {
-                            var elapsed_ms = current_stamp() - parseInt(evt.data.substring(5), 10);
-                            console.log(' RTT ' + elapsed_ms + ' ms\n');
-                        }
-                    };
-                    // }
-
-                    var constraints = {
-                        audio: false,
-                        video: false
-                    };
-
-                    var resolution = ""
-                    if (resolution) {
-                        resolution = resolution.split('x');
-                        constraints.video = {
-                            width: parseInt(resolution[0], 0),
-                            height: parseInt(resolution[1], 0)
-                        };
-                    } else {
-                        constraints.video = true;
-                    }
-
-                    this.waitingConnection = true;
-                    try {
-                        if (constraints.audio || constraints.video) {
-                            if (constraints.video) {
-                                document.getElementById('media').style.display = 'block';
-                            }
-
-                            const hostCanvas = document.createElement('canvas');
-                            const stream = hostCanvas.captureStream(10);
-                            stream.getVideoTracks().forEach(function (track) {
-                                pc.addTrack(track, stream);
-                            });
-                            await negotiate();
-                        } else {
-                            await negotiate();
-                        }
-                    }
-                    catch (e) {
-                        console.error(e)
-                        throw e;
-                    }
-                    finally {
-                        this.waitingConnection = false;
-                    }
-                },
-                stop() {
-                    // close data channel
-                    if (dc) {
-                        dc.close();
-                    }
-
-                    // close transceivers
-                    if (pc.getTransceivers) {
-                        pc.getTransceivers().forEach(function (transceiver) {
-                            if (transceiver.stop) {
-                                transceiver.stop();
-                            }
-                        });
-                    }
-
-                    // close local audio / video
-                    pc.getSenders().forEach(function (sender) {
-                        sender.track.stop();
+            start: async function() {
+                const hostCanvas = document.createElement('canvas');
+                const service_id = document.getElementById('service-id').value;
+                const server = await hyphaWebsocketClient.connectToServer({ "name": "js-client", "server_url": "http://127.0.0.1:9527", "method_timeout": 10 })
+                async function on_init(peerConnection){
+                    // connect audio / video
+                    peerConnection.addEventListener('track', function (evt) {
+                        if (evt.track.kind == 'video')
+                            document.getElementById('video').srcObject = evt.streams[0];
+                        else
+                            document.getElementById('audio').srcObject = evt.streams[0];
                     });
 
-                    // close peer connection
-                    setTimeout(function () {
-                        pc.close();
-                    }, 500);
+                    const frameRate = 20;
+                    // need to call getContext for Firefox: https://bugzilla.mozilla.org/show_bug.cgi?id=1572422
+                    const context = hostCanvas.getContext('2d');
+                    const stream = hostCanvas.captureStream(frameRate);
+                    for(let track of stream.getVideoTracks()){
+                        await peerConnection.addTrack(track, stream);
+                    };
                 }
+                
+                pc = await hyphaWebsocketClient.getRTCService(
+                    server,
+                    service_id,
+                    {on_init},
+                );
+                // now we can access the services using the webrtc peer-to-peer connection
+                // the rpc calls will go through webrtc instead of the websocket
+                const mc = await pc.get_service("microscope-control");
+                console.log('==========microscope control=========>', mc)
+                // expose it to window so the button click can call it
+                window.microscopeControl = mc;
+            },
+
+            stop: function() {
+                pc.close();
             }
-        })
+        };
     </script>
-
-
-
-
 </body>
 
 </html>

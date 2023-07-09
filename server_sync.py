@@ -1,14 +1,11 @@
 import argparse
-import asyncio
-import logging
 import fractions
-
+import logging
 import numpy as np
+import time
 from av import VideoFrame
-from imjoy_rpc.hypha import connect_to_server, register_rtc_service
-
 from aiortc import MediaStreamTrack
-
+from imjoy_rpc.hypha import connect_to_server_sync, register_rtc_service_sync, get_rtc_service_sync
 
 logger = logging.getLogger("pc")
 
@@ -24,19 +21,18 @@ class VideoTransformTrack(MediaStreamTrack):
         self.count = 0
 
     async def recv(self):
-        # frame = await self.track.recv()
         img = np.random.randint(0, 155, (150, 300, 3)).astype('uint8')
         new_frame = VideoFrame.from_ndarray(img, format="bgr24")
-        new_frame.pts = self.count # frame.pts
+        new_frame.pts = self.count 
         self.count+=1
         new_frame.time_base = fractions.Fraction(1, 1000)
         return new_frame
 
     
-async def start_service(service_id, workspace=None, token=None):
+def start_service(service_id, workspace=None, token=None):
     client_id = service_id + "-client"
     print(f"Starting service...")
-    server = await connect_to_server(
+    server = connect_to_server_sync(
         {
             "client_id": client_id,
             "server_url": "http://127.0.0.1:9527",
@@ -45,17 +41,16 @@ async def start_service(service_id, workspace=None, token=None):
         }
     )
     
-    # print("Workspace: ", workspace, "Token:", await server.generate_token({"expires_in": 3600*24*100}))
-    
-    async def on_init(peer_connection):
+    def on_init(peer_connection):
         @peer_connection.on("track")
         def on_track(track):
             print(f"Track {track.kind} received")
             peer_connection.addTrack(
                 VideoTransformTrack()
             )
+
             @track.on("ended")
-            async def on_ended():
+            def on_ended():
                 print(f"Track {track.kind} ended")
     
     def move(direction, context=None):
@@ -64,7 +59,7 @@ async def start_service(service_id, workspace=None, token=None):
     def snap(context=None):
         print("snap an image")
         
-    await server.register_service(
+    server.register_service(
         {
             "id": "microscope-control",
             "config":{
@@ -78,13 +73,9 @@ async def start_service(service_id, workspace=None, token=None):
         }
     )
     
-    # coturn = await server.get_service("coturn")
-    # ice_servers = await coturn.get_rtc_ice_servers()
-    # print("ICE servers:", ice_servers)
-    # obtain it from https://ai.imjoy.io/public/services/coturn/get_rtc_ice_servers
     ice_servers = [{"username":"1688956731:gvo9P4j7vs3Hhr6WqTUnen","credential":"yS9Vjds2jQg0qfq7xtlbwWspZQE=","urls":["turn:ai.imjoy.io:3478","stun:ai.imjoy.io:3478"]}]
 
-    await register_rtc_service(
+    register_rtc_service_sync(
         server,
         service_id=service_id,
         config={
@@ -93,6 +84,11 @@ async def start_service(service_id, workspace=None, token=None):
             "on_init": on_init,
         },
     )
+    
+    svc = get_rtc_service_sync(server, service_id)
+    mc = svc.get_service("microscope-control")
+    mc.move("left")
+    
     print(
         f"Service (client_id={client_id}, service_id={service_id}) started successfully, available at https://ai.imjoy.io/{server.config.workspace}/services"
     )
@@ -111,12 +107,10 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(level=logging.INFO)
 
-    loop = asyncio.get_event_loop()
-    loop.create_task(start_service(
+    start_service(
         args.service_id,
         workspace=None,
         token=None,
-    ))
-    loop.run_forever()
-
-    
+    )
+    while True:
+        time.sleep(1)
