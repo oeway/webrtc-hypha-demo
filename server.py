@@ -39,7 +39,7 @@ async def start_service(service_id, workspace=None, token=None):
     server = await connect_to_server(
         {
             "client_id": client_id,
-            "server_url": "http://127.0.0.1:9527",
+            "server_url": "https://ai.imjoy.io",
             "workspace": workspace,
             "token": token,
         }
