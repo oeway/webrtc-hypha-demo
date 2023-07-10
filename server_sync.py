@@ -73,14 +73,14 @@ def start_service(service_id, workspace=None, token=None):
         }
     )
     
-    ice_servers = [{"username":"1688956731:gvo9P4j7vs3Hhr6WqTUnen","credential":"yS9Vjds2jQg0qfq7xtlbwWspZQE=","urls":["turn:ai.imjoy.io:3478","stun:ai.imjoy.io:3478"]}]
+    # ice_servers = [{"username":"1688956731:gvo9P4j7vs3Hhr6WqTUnen","credential":"yS9Vjds2jQg0qfq7xtlbwWspZQE=","urls":["turn:ai.imjoy.io:3478","stun:ai.imjoy.io:3478"]}]
 
     register_rtc_service_sync(
         server,
         service_id=service_id,
         config={
             "visibility": "public",
-            "ice_servers": ice_servers,
+            # "ice_servers": ice_servers,
             "on_init": on_init,
         },
     )

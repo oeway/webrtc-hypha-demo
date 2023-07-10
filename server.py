@@ -82,14 +82,14 @@ async def start_service(service_id, workspace=None, token=None):
     # ice_servers = await coturn.get_rtc_ice_servers()
     # print("ICE servers:", ice_servers)
     # obtain it from https://ai.imjoy.io/public/services/coturn/get_rtc_ice_servers
-    ice_servers = [{"username":"1688956731:gvo9P4j7vs3Hhr6WqTUnen","credential":"yS9Vjds2jQg0qfq7xtlbwWspZQE=","urls":["turn:ai.imjoy.io:3478","stun:ai.imjoy.io:3478"]}]
+    # ice_servers = [{"username":"1688956731:gvo9P4j7vs3Hhr6WqTUnen","credential":"yS9Vjds2jQg0qfq7xtlbwWspZQE=","urls":["turn:ai.imjoy.io:3478","stun:ai.imjoy.io:3478"]}]
 
     await register_rtc_service(
         server,
         service_id=service_id,
         config={
             "visibility": "public",
-            "ice_servers": ice_servers,
+            # "ice_servers": ice_servers,
             "on_init": on_init,
         },
     )
