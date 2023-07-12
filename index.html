@@ -83,12 +83,12 @@
                     <span id="startStopIcon" class="fas fa-play"></span>
                 </button>
                 <br>
-                <button class="btn btn-secondary mb-2" onclick="microscopeControl.move('up')"><i class="fas fa-arrow-up"></i></button>
+                <button class="btn btn-secondary mb-2" onclick="microscopeControl.move({value: 100, axis: 'X', is_absolute: true, is_blocking: true, _rkwargs: true})"><i class="fas fa-arrow-up"></i></button>
                 <div class="d-flex justify-content-between">
-                    <button class="btn btn-secondary mr-2" onclick="microscopeControl.move('left')"><i class="fas fa-arrow-left"></i></button>
-                    <button class="btn btn-secondary ml-2" onclick="microscopeControl.move('right')"><i class="fas fa-arrow-right"></i></button>
+                    <button class="btn btn-secondary mr-2" onclick="microscopeControl.move({value: -100, axis: 'X', is_absolute: true, is_blocking: true, _rkwargs: true})"><i class="fas fa-arrow-left"></i></button>
+                    <button class="btn btn-secondary ml-2" onclick="microscopeControl.move({value: 100, axis: 'Y', is_absolute: true, is_blocking: true, _rkwargs: true})"><i class="fas fa-arrow-right"></i></button>
                 </div>
-                <button class="btn btn-secondary mt-2" onclick="microscopeControl.move('down')"><i class="fas fa-arrow-down"></i></button>
+                <button class="btn btn-secondary mt-2" onclick="microscopeControl.move({value: -100, axis: 'Y', is_absolute: true, is_blocking: true, _rkwargs: true})"><i class="fas fa-arrow-down"></i></button>
             </div>
             <div id="media" class="shadow-lg">
                 <audio id="audio" autoplay="true"></audio>
