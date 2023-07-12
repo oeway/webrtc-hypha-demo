@@ -5,7 +5,7 @@ import numpy as np
 import time
 from av import VideoFrame
 from aiortc import MediaStreamTrack
-from imjoy_rpc.hypha import connect_to_server_sync, register_rtc_service_sync, get_rtc_service_sync
+from imjoy_rpc.hypha.sync import connect_to_server, register_rtc_service, get_rtc_service
 
 logger = logging.getLogger("pc")
 
@@ -32,7 +32,7 @@ class VideoTransformTrack(MediaStreamTrack):
 def start_service(service_id, workspace=None, token=None):
     client_id = service_id + "-client"
     print(f"Starting service...")
-    server = connect_to_server_sync(
+    server = connect_to_server(
         {
             "client_id": client_id,
             "server_url": "https://ai.imjoy.io",
@@ -75,7 +75,7 @@ def start_service(service_id, workspace=None, token=None):
     
     # ice_servers = [{"username":"1688956731:gvo9P4j7vs3Hhr6WqTUnen","credential":"yS9Vjds2jQg0qfq7xtlbwWspZQE=","urls":["turn:ai.imjoy.io:3478","stun:ai.imjoy.io:3478"]}]
 
-    register_rtc_service_sync(
+    register_rtc_service(
         server,
         service_id=service_id,
         config={
@@ -85,7 +85,7 @@ def start_service(service_id, workspace=None, token=None):
         },
     )
     
-    svc = get_rtc_service_sync(server, service_id)
+    svc = get_rtc_service(server, service_id)
     mc = svc.get_service("microscope-control")
     mc.move("left")
     
