@@ -93,6 +93,11 @@ async def start_service(service_id, workspace=None, token=None):
             "on_init": on_init,
         },
     )
+    
+    # svc = await get_rtc_service(server, service_id)
+    # mc = await svc.get_service("microscope-control")
+    # await mc.move("left")
+
     print(
         f"Service (client_id={client_id}, service_id={service_id}) started successfully, available at https://ai.imjoy.io/{server.config.workspace}/services"
     )

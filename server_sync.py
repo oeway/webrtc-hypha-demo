@@ -85,9 +85,9 @@ def start_service(service_id, workspace=None, token=None):
         },
     )
     
-    svc = get_rtc_service(server, service_id)
-    mc = svc.get_service("microscope-control")
-    mc.move("left")
+    # svc = get_rtc_service(server, service_id)
+    # mc = svc.get_service("microscope-control")
+    # mc.move("left")
     
     print(
         f"Service (client_id={client_id}, service_id={service_id}) started successfully, available at https://ai.imjoy.io/{server.config.workspace}/services"
