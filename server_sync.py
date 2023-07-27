@@ -5,7 +5,7 @@ import numpy as np
 import time
 from av import VideoFrame
 from aiortc import MediaStreamTrack
-from imjoy_rpc.hypha.sync import connect_to_server, register_rtc_service, get_rtc_service
+from imjoy_rpc.hypha.sync import login, connect_to_server, register_rtc_service, get_rtc_service
 
 logger = logging.getLogger("pc")
 
@@ -29,9 +29,10 @@ class VideoTransformTrack(MediaStreamTrack):
         return new_frame
 
     
-def start_service(service_id, workspace=None, token=None):
+def start_service(service_id, workspace=None):
     client_id = service_id + "-client"
     print(f"Starting service...")
+    token = login({"server_url": "https://ai.imjoy.io",})
     server = connect_to_server(
         {
             "client_id": client_id,
@@ -110,7 +111,6 @@ if __name__ == "__main__":
     start_service(
         args.service_id,
         workspace=None,
-        token=None,
     )
     while True:
         time.sleep(1)

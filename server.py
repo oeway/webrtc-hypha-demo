@@ -5,7 +5,7 @@ import fractions
 
 import numpy as np
 from av import VideoFrame
-from imjoy_rpc.hypha import connect_to_server, register_rtc_service
+from imjoy_rpc.hypha import login, connect_to_server, register_rtc_service
 
 from aiortc import MediaStreamTrack
 
@@ -35,6 +35,7 @@ class VideoTransformTrack(MediaStreamTrack):
     
 async def start_service(service_id, workspace=None, token=None):
     client_id = service_id + "-client"
+    token = await login({"server_url": "https://ai.imjoy.io",})
     print(f"Starting service...")
     server = await connect_to_server(
         {
