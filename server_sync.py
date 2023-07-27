@@ -31,8 +31,8 @@ class VideoTransformTrack(MediaStreamTrack):
     
 def start_service(service_id, workspace=None):
     client_id = service_id + "-client"
-    print(f"Starting service...")
     token = login({"server_url": "https://ai.imjoy.io",})
+    print(f"Starting service...")
     server = connect_to_server(
         {
             "client_id": client_id,
