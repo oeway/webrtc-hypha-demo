@@ -54,8 +54,8 @@ def start_service(service_id, workspace=None):
             def on_ended():
                 print(f"Track {track.kind} ended")
     
-    def move(direction, context=None):
-        print("move: ", direction)
+    def move(value, axis, is_absolute, is_blocking, context=None):
+        print("move: ", value, axis, is_absolute, is_blocking)
     
     def snap(context=None):
         print("snap an image")
