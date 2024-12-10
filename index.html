@@ -7,7 +7,7 @@
     <title>WebRTC demo</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/imjoy-rpc@0.5.36/dist/hypha-rpc-websocket.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hypha-rpc@latest/dist/hypha-rpc-websocket.min.js"></script>
     <style>
         body,
         html {
@@ -101,7 +101,6 @@
     <script>
         const queryString = window.location.search;
         const urlParams = new URLSearchParams(queryString);
-
         if (urlParams.get('service_id')) {
             document.getElementById('service-id').value = urlParams.get('service_id');
         }
@@ -142,7 +141,8 @@
             start: async function() {
                 const hostCanvas = document.createElement('canvas');
                 const service_id = document.getElementById('service-id').value;
-                const server = await hyphaWebsocketClient.connectToServer({ "name": "js-client", "server_url": "https://ai.imjoy.io", "method_timeout": 10 })
+                const token = await hyphaWebsocketClient.login({"server_url": "https://hypha.aicell.io","workspace": "webrtc-demo"});
+                const server = await hyphaWebsocketClient.connectToServer({"server_url": "https://hypha.aicell.io","workspace": "webrtc-demo","token": token});  
                 async function on_init(peerConnection){
                     // connect audio / video
                     peerConnection.addEventListener('track', function (evt) {
@@ -165,10 +165,11 @@
                     server,
                     service_id,
                     {on_init},
+                    
                 );
                 // now we can access the services using the webrtc peer-to-peer connection
                 // the rpc calls will go through webrtc instead of the websocket
-                const mc = await pc.get_service("microscope-control");
+                const mc = await pc.getService("microscope-control-webrpc-demo");
                 console.log('==========microscope control=========>', mc)
                 // expose it to window so the button click can call it
                 window.microscopeControl = mc;

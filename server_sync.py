@@ -5,7 +5,7 @@ import numpy as np
 import time
 from av import VideoFrame
 from aiortc import MediaStreamTrack
-from imjoy_rpc.hypha.sync import login, connect_to_server, register_rtc_service, get_rtc_service
+from hypha_rpc.sync import login, connect_to_server, register_rtc_service, get_rtc_service
 
 logger = logging.getLogger("pc")
 
@@ -31,12 +31,12 @@ class VideoTransformTrack(MediaStreamTrack):
     
 def start_service(service_id, workspace=None):
     client_id = service_id + "-client"
-    token = login({"server_url": "https://ai.imjoy.io",})
+    token = login({"server_url": "https://hypha.aicell.io",})
     print(f"Starting service...")
     server = connect_to_server(
         {
             "client_id": client_id,
-            "server_url": "https://ai.imjoy.io",
+            "server_url": "https://hypha.aicell.io",
             "workspace": workspace,
             "token": token,
         }
@@ -62,7 +62,7 @@ def start_service(service_id, workspace=None):
         
     server.register_service(
         {
-            "id": "microscope-control",
+            "id": "microscope-control-sync",
             "config":{
                 "visibility": "public",
                 "run_in_executor": True,
@@ -91,15 +91,15 @@ def start_service(service_id, workspace=None):
     # mc.move("left")
     
     print(
-        f"Service (client_id={client_id}, service_id={service_id}) started successfully, available at https://ai.imjoy.io/{server.config.workspace}/services"
+        f"Service (client_id={client_id}, service_id={service_id}) started successfully, available at https://hypha.aicell.io/{server.config.workspace}/services"
     )
-    print(f"You can access the webrtc stream at https://oeway.github.io/webrtc-hypha-demo/?service_id={service_id}")
+    #print(f"You can access the webrtc stream at https://oeway.github.io/webrtc-hypha-demo/?service_id={service_id}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="WebRTC demo for video streaming"
     )
-    parser.add_argument("--service-id", type=str, default="aiortc-demo", help="The service id")
+    parser.add_argument("--service-id", type=str, default="aiortc-demo-sync", help="The service id")
     parser.add_argument("--verbose", "-v", action="count")
     args = parser.parse_args()
 

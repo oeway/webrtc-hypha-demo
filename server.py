@@ -5,8 +5,7 @@ import fractions
 
 import numpy as np
 from av import VideoFrame
-from imjoy_rpc.hypha import login, connect_to_server, register_rtc_service
-
+from hypha_rpc import login, connect_to_server, register_rtc_service, get_rtc_service  
 from aiortc import MediaStreamTrack
 
 
@@ -35,16 +34,15 @@ class VideoTransformTrack(MediaStreamTrack):
     
 async def start_service(service_id, workspace=None, token=None):
     client_id = service_id + "-client"
-    token = await login({"server_url": "https://ai.imjoy.io",})
+    token = await login({"server_url": "https://hypha.aicell.io",})
     print(f"Starting service...")
-    server = await connect_to_server(
-        {
-            "client_id": client_id,
-            "server_url": "https://ai.imjoy.io",
-            "workspace": workspace,
-            "token": token,
-        }
-    )
+    server = await connect_to_server(  
+        {  
+            "server_url": "https://hypha.aicell.io",  
+            "workspace": workspace, 
+            "token": token,  
+        }  
+    )  
     
     # print("Workspace: ", workspace, "Token:", await server.generate_token({"expires_in": 3600*24*100}))
     
@@ -75,7 +73,8 @@ async def start_service(service_id, workspace=None, token=None):
             },
             "type": "echo",
             "move": move,
-            "snap": snap
+            "snap": snap,
+            "context": {"ws": workspace}
         }
     )
     
@@ -83,24 +82,29 @@ async def start_service(service_id, workspace=None, token=None):
     # ice_servers = await coturn.get_rtc_ice_servers()
     # print("ICE servers:", ice_servers)
     # obtain it from https://ai.imjoy.io/public/services/coturn/get_rtc_ice_servers
-    # ice_servers = [{"username":"1688956731:gvo9P4j7vs3Hhr6WqTUnen","credential":"yS9Vjds2jQg0qfq7xtlbwWspZQE=","urls":["turn:ai.imjoy.io:3478","stun:ai.imjoy.io:3478"]}]
+    # ice_servers = [{"username":"1688956731:gvo9P4j7vs3Hhr6WqTUnen","credential":"yS9Vjds2jQg0qfq7xtlbwWspZQE=","urls":["turn:hypha.aicell.io:3478","stun:ai.imjoy.io:3478"]}]
 
     await register_rtc_service(
         server,
         service_id=service_id,
         config={
+            "workspace": workspace,
             "visibility": "public",
             # "ice_servers": ice_servers,
             "on_init": on_init,
         },
     )
     
-    # svc = await get_rtc_service(server, service_id)
-    # mc = await svc.get_service("microscope-control")
-    # await mc.move("left")
+    await asyncio.sleep(1)
+    svc = await get_rtc_service(server, service_id, {  
+    "peer_id": service_id + "-peer",
+    "workspace": workspace, 
+    })  
+    #mc = await svc.get_service("microscope-control", {"workspace": workspace})
+    #await mc.move("left")
 
     print(
-        f"Service (client_id={client_id}, service_id={service_id}) started successfully, available at https://ai.imjoy.io/{server.config.workspace}/services"
+        f"Service (client_id={client_id}, service_id={service_id}) started successfully, available at https://hypha.aicell.io/{server.config.workspace}/services"
     )
     print(f"You can access the webrtc stream at https://oeway.github.io/webrtc-hypha-demo/?service_id={service_id}")
 
@@ -120,7 +124,7 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.create_task(start_service(
         args.service_id,
-        workspace=None,
+        workspace='webrtc-demo',
         token=None,
     ))
     loop.run_forever()
