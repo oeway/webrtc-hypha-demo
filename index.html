@@ -141,8 +141,8 @@
             start: async function() {
                 const hostCanvas = document.createElement('canvas');
                 const service_id = document.getElementById('service-id').value;
-                const token = await hyphaWebsocketClient.login({"server_url": "https://hypha.aicell.io","workspace": "agent-lens"});
-                const server = await hyphaWebsocketClient.connectToServer({"server_url": "https://hypha.aicell.io","workspace": "agent-lens","token": token});  
+                const token = await hyphaWebsocketClient.login({"server_url": "https://hypha.aicell.io","workspace": "webrtc-demo"});
+                const server = await hyphaWebsocketClient.connectToServer({"server_url": "https://hypha.aicell.io","workspace": "webrtc-demo","token": token});  
                 async function on_init(peerConnection){
                     // connect audio / video
                     peerConnection.addEventListener('track', function (evt) {
@@ -164,11 +164,12 @@
                 pc = await hyphaWebsocketClient.getRTCService(
                     server,
                     service_id,
-                    {on_init},
+                    {on_init, "peer_id": service_id + "-peer"},
+                    
                 );
                 // now we can access the services using the webrtc peer-to-peer connection
                 // the rpc calls will go through webrtc instead of the websocket
-                const mc = await pc.getService("microscope-control");
+                const mc = await pc.getService("microscope-control-webrpc-demo");
                 console.log('==========microscope control=========>', mc)
                 // expose it to window so the button click can call it
                 window.microscopeControl = mc;

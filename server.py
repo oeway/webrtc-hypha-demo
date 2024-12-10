@@ -40,7 +40,6 @@ async def start_service(service_id, workspace=None, token=None):
         {  
             "server_url": "https://hypha.aicell.io",  
             "workspace": workspace, 
-            "ws": workspace, 
             "token": token,  
         }  
     )  
@@ -101,8 +100,8 @@ async def start_service(service_id, workspace=None, token=None):
     "peer_id": service_id + "-peer",
     "workspace": workspace, 
     })  
-    mc = await svc.get_service("microscope-control")
-    await mc.move("left")
+    #mc = await svc.get_service("microscope-control", {"workspace": workspace})
+    #await mc.move("left")
 
     print(
         f"Service (client_id={client_id}, service_id={service_id}) started successfully, available at https://hypha.aicell.io/{server.config.workspace}/services"
@@ -125,7 +124,7 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.create_task(start_service(
         args.service_id,
-        workspace='agent-lens',
+        workspace='webrtc-demo',
         token=None,
     ))
     loop.run_forever()
