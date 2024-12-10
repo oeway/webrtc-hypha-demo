@@ -5,7 +5,7 @@ import fractions
 
 import numpy as np
 from av import VideoFrame
-from hypha_rpc import login, connect_to_server, register_rtc_service  
+from hypha_rpc import login, connect_to_server, register_rtc_service, get_rtc_service  
 from aiortc import MediaStreamTrack
 
 
@@ -39,7 +39,8 @@ async def start_service(service_id, workspace=None, token=None):
     server = await connect_to_server(  
         {  
             "server_url": "https://hypha.aicell.io",  
-            "workspace": workspace,  
+            "workspace": workspace, 
+            "ws": workspace, 
             "token": token,  
         }  
     )  
@@ -73,7 +74,8 @@ async def start_service(service_id, workspace=None, token=None):
             },
             "type": "echo",
             "move": move,
-            "snap": snap
+            "snap": snap,
+            "context": {"ws": workspace}
         }
     )
     
@@ -87,15 +89,20 @@ async def start_service(service_id, workspace=None, token=None):
         server,
         service_id=service_id,
         config={
+            "workspace": workspace,
             "visibility": "public",
             # "ice_servers": ice_servers,
             "on_init": on_init,
         },
     )
     
-    # svc = await get_rtc_service(server, service_id)
-    # mc = await svc.get_service("microscope-control")
-    # await mc.move("left")
+    await asyncio.sleep(1)
+    svc = await get_rtc_service(server, service_id, {  
+    "peer_id": service_id + "-peer",
+    "workspace": workspace, 
+    })  
+    mc = await svc.get_service("microscope-control")
+    await mc.move("left")
 
     print(
         f"Service (client_id={client_id}, service_id={service_id}) started successfully, available at https://hypha.aicell.io/{server.config.workspace}/services"
@@ -118,7 +125,7 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.create_task(start_service(
         args.service_id,
-        workspace=None,
+        workspace='agent-lens',
         token=None,
     ))
     loop.run_forever()
