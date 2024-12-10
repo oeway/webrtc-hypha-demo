@@ -164,7 +164,7 @@
                 pc = await hyphaWebsocketClient.getRTCService(
                     server,
                     service_id,
-                    {on_init, "peer_id": service_id + "-peer"},
+                    {on_init},
                     
                 );
                 // now we can access the services using the webrtc peer-to-peer connection
