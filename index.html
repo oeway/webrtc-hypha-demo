@@ -142,7 +142,11 @@
             start: async function() {
                 const hostCanvas = document.createElement('canvas');
                 const service_id = document.getElementById('service-id').value;
-                const server = await hyphaWebsocketClient.connectToServer({ "name": "js-client", "server_url": "https://ai.imjoy.io", "method_timeout": 10 })
+                const token = await hyphaWebsocketClient.login({ "server_url": "https://hypha.aicell.io", "login_callback": (context) => {
+                    //  print(f"Go to login url: {context['login_url']}")
+                    window.open(context.login_url, "_blank")
+                } });
+                const server = await hyphaWebsocketClient.connectToServer({ "name": "js-client", "server_url": "https://hypha.aicell.io", "method_timeout": 10 })
                 async function on_init(peerConnection){
                     // connect audio / video
                     peerConnection.addEventListener('track', function (evt) {
