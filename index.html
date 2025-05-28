@@ -4,96 +4,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebRTC demo</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/imjoy-rpc@0.5.36/dist/hypha-rpc-websocket.min.js"></script>
+    <title>WebRTC Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/hypha-rpc@0.20.54/dist/hypha-rpc-websocket.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        },
+                        success: {
+                            500: '#10b981',
+                            600: '#059669',
+                        },
+                        warning: {
+                            500: '#f59e0b',
+                            600: '#d97706',
+                        },
+                        danger: {
+                            500: '#ef4444',
+                            600: '#dc2626',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body,
-        html {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
+        .glass-effect {
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .control-button {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .control-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .video-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
-        #app {
-            padding: 20px;
+        .floating-controls {
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.3s ease-in-out;
+            pointer-events: none;
         }
 
-        #title {
-            font-size: 1.5em;
-            margin-bottom: 20px;
+        .video-wrapper:hover .floating-controls {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
         }
 
-        #media {
-            max-width: 1280px;
-            height: 50vh;
-            position: relative;
+        .floating-control-btn {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.2s ease-in-out;
         }
 
-        audio,
-        video {
-            width: 100%;
-            height: 50vh;
+        .floating-control-btn:hover {
+            background: rgba(59, 130, 246, 0.8);
+            border-color: rgba(255, 255, 255, 0.6);
+            transform: scale(1.1);
         }
 
-        #viewer-section {
-            max-width: 800px;
-            margin-top: 20px;
+        .floating-control-btn:active {
+            transform: scale(0.95);
         }
 
-        .viewer-container {
-            position: relative;
-        }
-
-        #control-panel {
-            position: absolute;
-            z-index: 10;
-            top: 60px;
-            right: 10px;
-            width: 100px;
-            height: 100px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-        }
-
-        #control-panel .btn-group {
-            display: flex;
-            justify-content: space-between;
+        .position-indicator {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
     </style>
 </head>
 
-<body>
-    <div id="app">
-        <h1 id="title" class="text-center mb-4">WebRTC Hypha Demo</h1>
-        <div class="form-group">
-            <label for="service-id">WebRTC service id: </label>
-            <input id="service-id" type="text" value="aiortc-demo" class="form-control" />
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">WebRTC Hypha Demo</h1>
+            <p class="text-gray-600 text-lg">Real-time microscope control and streaming</p>
         </div>
-        <div class="d-flex justify-content-center mb-3">
-            
-        </div>
-        <div id="viewer-section" class="position-relative">
-            <div id="control-panel" class="d-flex flex-column align-items-center justify-content-center">
-                <button id="startStopButton" class="btn btn-primary" onclick="window.methods.toggleLive()">
-                    <span id="startStopIcon" class="fas fa-play"></span>
-                </button>
-                <br>
-                <button class="btn btn-secondary mb-2" onclick="microscopeControl.move({value: 100, axis: 'X', is_absolute: true, is_blocking: true, _rkwargs: true})"><i class="fas fa-arrow-up"></i></button>
-                <div class="d-flex justify-content-between">
-                    <button class="btn btn-secondary mr-2" onclick="microscopeControl.move({value: -100, axis: 'X', is_absolute: true, is_blocking: true, _rkwargs: true})"><i class="fas fa-arrow-left"></i></button>
-                    <button class="btn btn-secondary ml-2" onclick="microscopeControl.move({value: 100, axis: 'Y', is_absolute: true, is_blocking: true, _rkwargs: true})"><i class="fas fa-arrow-right"></i></button>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- Left Panel - Controls -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Service Configuration Card -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-cog text-primary-500 mr-2"></i>
+                        Configuration
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="service-id" class="block text-sm font-medium text-gray-700 mb-2">
+                                WebRTC Service ID
+                            </label>
+                            <input 
+                                id="service-id" 
+                                type="text" 
+                                value="aiortc-demo" 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+                                placeholder="Enter service ID"
+                            />
+                        </div>
+                    </div>
                 </div>
-                <button class="btn btn-secondary mt-2" onclick="microscopeControl.move({value: -100, axis: 'Y', is_absolute: true, is_blocking: true, _rkwargs: true})"><i class="fas fa-arrow-down"></i></button>
+
+                <!-- Authentication Card -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-shield-alt text-primary-500 mr-2"></i>
+                        Authentication
+                    </h3>
+                    <div class="space-y-4">
+                        <button 
+                            id="loginButton" 
+                            class="w-full bg-success-500 hover:bg-success-600 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center control-button"
+                            onclick="window.methods.login()" 
+                            title="Login to Hypha server"
+                        >
+                            <span id="loginIcon" class="fas fa-sign-in-alt mr-2"></span>
+                            Login
+                        </button>
+                        <div class="flex items-center justify-center">
+                            <span id="loginStatus" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                                <i class="fas fa-circle text-gray-400 mr-2 text-xs"></i>
+                                Not logged in
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stream Control Card -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-video text-primary-500 mr-2"></i>
+                        Stream Control
+                    </h3>
+                    <button 
+                        id="startStopButton" 
+                        class="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center control-button disabled:opacity-50 disabled:cursor-not-allowed"
+                        onclick="window.methods.toggleLive()" 
+                        title="Start/Stop live stream" 
+                        disabled
+                    >
+                        <span id="startStopIcon" class="fas fa-play mr-2"></span>
+                        Start Stream
+                    </button>
+                </div>
+
             </div>
-            <div id="media" class="shadow-lg">
-                <audio id="audio" autoplay="true"></audio>
-                <video id="video" autoplay="true" playsinline="true"></video>
-               
+
+            <!-- Right Panel - Video Stream -->
+            <div class="lg:col-span-3">
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                    <div class="bg-gradient-to-r from-primary-500 to-primary-600 px-6 py-4">
+                        <h3 class="text-xl font-semibold text-white flex items-center">
+                            <i class="fas fa-microscope mr-2"></i>
+                            Microscope View
+                        </h3>
+                    </div>
+                    <div class="relative video-container">
+                        <div class="video-wrapper relative">
+                            <div id="media" class="relative w-full h-96 lg:h-[600px] bg-gray-900 flex items-center justify-center">
+                                <audio id="audio" autoplay="true" class="hidden"></audio>
+                                <video 
+                                    id="video" 
+                                    autoplay="true" 
+                                    playsinline="true" 
+                                    class="w-full h-full object-cover rounded-b-xl"
+                                ></video>
+                                
+                                <!-- Overlay when no stream -->
+                                <div id="no-stream-overlay" class="absolute inset-0 flex flex-col items-center justify-center text-white bg-gray-800 bg-opacity-75 rounded-b-xl">
+                                    <i class="fas fa-video-slash text-6xl mb-4 opacity-50"></i>
+                                    <p class="text-xl font-medium mb-2">No Stream Active</p>
+                                    <p class="text-gray-300">Login and start streaming to view content</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Floating Microscope Controls -->
+                            <div class="floating-controls absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div class="grid grid-cols-3 gap-3 pointer-events-auto">
+                                    <!-- Top row -->
+                                    <div></div>
+                                    <button 
+                                        class="floating-control-btn w-12 h-12 rounded-full text-white flex items-center justify-center text-lg"
+                                        onclick="window.methods.moveRelative(0, -50)" 
+                                        title="Move up"
+                                    >
+                                        <i class="fas fa-arrow-up"></i>
+                                    </button>
+                                    <div></div>
+                                    
+                                    <!-- Middle row -->
+                                    <button 
+                                        class="floating-control-btn w-12 h-12 rounded-full text-white flex items-center justify-center text-lg"
+                                        onclick="window.methods.moveRelative(-50, 0)" 
+                                        title="Move left"
+                                    >
+                                        <i class="fas fa-arrow-left"></i>
+                                    </button>
+                                    <div class="w-12 h-12 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                                        <i class="fas fa-crosshairs text-white text-lg"></i>
+                                    </div>
+                                    <button 
+                                        class="floating-control-btn w-12 h-12 rounded-full text-white flex items-center justify-center text-lg"
+                                        onclick="window.methods.moveRelative(50, 0)" 
+                                        title="Move right"
+                                    >
+                                        <i class="fas fa-arrow-right"></i>
+                                    </button>
+                                    
+                                    <!-- Bottom row -->
+                                    <div></div>
+                                    <button 
+                                        class="floating-control-btn w-12 h-12 rounded-full text-white flex items-center justify-center text-lg"
+                                        onclick="window.methods.moveRelative(0, 50)" 
+                                        title="Move down"
+                                    >
+                                        <i class="fas fa-arrow-down"></i>
+                                    </button>
+                                    <div></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Stream Status Indicator -->
+                            <div class="absolute top-4 left-4">
+                                <div id="stream-status" class="glass-effect px-3 py-2 rounded-lg text-white text-sm font-medium flex items-center">
+                                    <div id="status-indicator" class="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
+                                    <span id="status-text">Offline</span>
+                                </div>
+                            </div>
+
+                            <!-- Position Indicator -->
+                            <div class="absolute top-4 right-4">
+                                <div class="position-indicator px-3 py-2 rounded-lg text-white text-sm font-medium">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="flex items-center">
+                                            <span class="text-red-400 mr-1">X:</span>
+                                            <span id="live-position-x" class="font-mono">240</span>
+                                        </span>
+                                        <span class="flex items-center">
+                                            <span class="text-green-400 mr-1">Y:</span>
+                                            <span id="live-position-y" class="font-mono">180</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -113,40 +291,221 @@
         }
 
         let pc;
+        let authToken = null;
+        let server = null;
+        let positionUpdateInterval = null;
+        
         window.methods = {
             liveRunning: false,
+            isLoggedIn: false,
+
+            updateLoginStatus: function() {
+                const loginButton = document.getElementById('loginButton');
+                const loginStatus = document.getElementById('loginStatus');
+                const startStopButton = document.getElementById('startStopButton');
+                const loginIcon = document.getElementById('loginIcon');
+
+                if (this.isLoggedIn) {
+                    loginButton.classList.remove('bg-success-500', 'hover:bg-success-600');
+                    loginButton.classList.add('bg-warning-500', 'hover:bg-warning-600');
+                    loginButton.innerHTML = '<span class="fas fa-sign-out-alt mr-2"></span> Logout';
+                    loginButton.onclick = () => this.logout();
+                    loginStatus.classList.remove('bg-gray-100', 'text-gray-800');
+                    loginStatus.classList.add('bg-green-100', 'text-green-800');
+                    loginStatus.innerHTML = '<i class="fas fa-circle text-green-500 mr-2 text-xs"></i>Logged in';
+                    startStopButton.disabled = false;
+                } else {
+                    loginButton.classList.remove('bg-warning-500', 'hover:bg-warning-600');
+                    loginButton.classList.add('bg-success-500', 'hover:bg-success-600');
+                    loginButton.innerHTML = '<span class="fas fa-sign-in-alt mr-2"></span> Login';
+                    loginButton.onclick = () => this.login();
+                    loginStatus.classList.remove('bg-green-100', 'text-green-800');
+                    loginStatus.classList.add('bg-gray-100', 'text-gray-800');
+                    loginStatus.innerHTML = '<i class="fas fa-circle text-gray-400 mr-2 text-xs"></i>Not logged in';
+                    startStopButton.disabled = true;
+                }
+            },
+
+            updateStreamStatus: function(isStreaming) {
+                const statusIndicator = document.getElementById('status-indicator');
+                const statusText = document.getElementById('status-text');
+                const noStreamOverlay = document.getElementById('no-stream-overlay');
+
+                if (isStreaming) {
+                    statusIndicator.classList.remove('bg-red-500');
+                    statusIndicator.classList.add('bg-green-500');
+                    statusText.textContent = 'Live';
+                    noStreamOverlay.classList.add('hidden');
+                } else {
+                    statusIndicator.classList.remove('bg-green-500');
+                    statusIndicator.classList.add('bg-red-500');
+                    statusText.textContent = 'Offline';
+                    noStreamOverlay.classList.remove('hidden');
+                }
+            },
+
+            updatePosition: async function() {
+                if (window.microscopeControl) {
+                    try {
+                        const position = await window.microscopeControl.get_position();
+                        document.getElementById('live-position-x').textContent = Math.round(position.x);
+                        document.getElementById('live-position-y').textContent = Math.round(position.y);
+                    } catch (error) {
+                        console.error('Failed to get position:', error);
+                    }
+                }
+            },
+
+            moveRelative: async function(deltaX, deltaY) {
+                if (window.microscopeControl) {
+                    try {
+                        if (deltaX !== 0) {
+                            await window.microscopeControl.move({
+                                value: deltaX, 
+                                axis: 'X', 
+                                is_absolute: false, 
+                                is_blocking: false, 
+                                _rkwargs: true
+                            });
+                        }
+                        if (deltaY !== 0) {
+                            await window.microscopeControl.move({
+                                value: deltaY, 
+                                axis: 'Y', 
+                                is_absolute: false, 
+                                is_blocking: false, 
+                                _rkwargs: true
+                            });
+                        }
+                        // Update position display immediately
+                        setTimeout(() => this.updatePosition(), 100);
+                    } catch (error) {
+                        console.error('Move command failed:', error);
+                    }
+                } else {
+                    console.warn('Microscope control not available');
+                }
+            },
+
+            snapImage: async function() {
+                if (window.microscopeControl) {
+                    try {
+                        const result = await window.microscopeControl.snap();
+                        console.log('Image captured:', result);
+                        // You could show a notification here
+                        const button = event.target.closest('button');
+                        const originalText = button.innerHTML;
+                        button.innerHTML = '<i class="fas fa-check mr-2"></i>Captured!';
+                        button.classList.add('bg-green-500');
+                        setTimeout(() => {
+                            button.innerHTML = originalText;
+                            button.classList.remove('bg-green-500');
+                        }, 1000);
+                    } catch (error) {
+                        console.error('Snap command failed:', error);
+                    }
+                } else {
+                    console.warn('Microscope control not available');
+                }
+            },
+
+            login: async function() {
+                try {
+                    const loginButton = document.getElementById('loginButton');
+                    loginButton.disabled = true;
+                    loginButton.innerHTML = '<span class="fas fa-spinner fa-spin mr-2"></span> Logging in...';
+
+                    authToken = await hyphaWebsocketClient.login({ 
+                        "server_url": "https://hypha.aicell.io", 
+                        "login_callback": (context) => {
+                            window.open(context.login_url, "_blank")
+                        } 
+                    });
+                    
+                    server = await hyphaWebsocketClient.connectToServer({ 
+                        "name": "js-client", 
+                        "server_url": "https://hypha.aicell.io", 
+                        "method_timeout": 60,
+                        "token": authToken
+                    });
+
+                    this.isLoggedIn = true;
+                    this.updateLoginStatus();
+                    console.log('Successfully logged in');
+                } catch (error) {
+                    console.error('Login failed:', error);
+                    alert('Login failed: ' + error.message);
+                    this.isLoggedIn = false;
+                    this.updateLoginStatus();
+                } finally {
+                    const loginButton = document.getElementById('loginButton');
+                    loginButton.disabled = false;
+                }
+            },
+
+            logout: function() {
+                authToken = null;
+                server = null;
+                this.isLoggedIn = false;
+                this.updateLoginStatus();
+                if (this.liveRunning) {
+                    this.stop();
+                    this.liveRunning = false;
+                    const button = document.getElementById('startStopButton');
+                    const icon = document.getElementById('startStopIcon');
+                    button.classList.remove('bg-danger-500', 'hover:bg-danger-600');
+                    button.classList.add('bg-primary-500', 'hover:bg-primary-600');
+                    button.innerHTML = '<span class="fas fa-play mr-2"></span> Start Stream';
+                    this.updateStreamStatus(false);
+                }
+                if (positionUpdateInterval) {
+                    clearInterval(positionUpdateInterval);
+                    positionUpdateInterval = null;
+                }
+                console.log('Logged out');
+            },
 
             toggleLive: async function() {
                 const button = document.getElementById('startStopButton');
-                const icon = document.getElementById('startStopIcon');
 
                 if (!this.liveRunning) {
-                    button.classList.remove('btn-primary');
-                    button.classList.add('btn-danger');
-                    icon.classList.remove('fa-play');
-                    icon.classList.add('fa-stop');
+                    button.classList.remove('bg-primary-500', 'hover:bg-primary-600');
+                    button.classList.add('bg-danger-500', 'hover:bg-danger-600');
+                    button.innerHTML = '<span class="fas fa-stop mr-2"></span> Stop Stream';
                     button.disabled = true;
                     await this.start();
                     button.disabled = false;
+                    this.updateStreamStatus(true);
+                    
+                    // Start position updates
+                    positionUpdateInterval = setInterval(() => {
+                        this.updatePosition();
+                    }, 1000);
                 } else {
-                    button.classList.remove('btn-danger');
-                    button.classList.add('btn-primary');
-                    icon.classList.remove('fa-stop');
-                    icon.classList.add('fa-play');
+                    button.classList.remove('bg-danger-500', 'hover:bg-danger-600');
+                    button.classList.add('bg-primary-500', 'hover:bg-primary-600');
+                    button.innerHTML = '<span class="fas fa-play mr-2"></span> Start Stream';
                     this.stop();
+                    this.updateStreamStatus(false);
+                    
+                    // Stop position updates
+                    if (positionUpdateInterval) {
+                        clearInterval(positionUpdateInterval);
+                        positionUpdateInterval = null;
+                    }
                 }
 
                 this.liveRunning = !this.liveRunning;
             },
 
             start: async function() {
+                if (!this.isLoggedIn || !server) {
+                    alert('Please login first');
+                    return;
+                }
+                
                 const hostCanvas = document.createElement('canvas');
                 const service_id = document.getElementById('service-id').value;
-                const token = await hyphaWebsocketClient.login({ "server_url": "https://hypha.aicell.io", "login_callback": (context) => {
-                    //  print(f"Go to login url: {context['login_url']}")
-                    window.open(context.login_url, "_blank")
-                } });
-                const server = await hyphaWebsocketClient.connectToServer({ "name": "js-client", "server_url": "https://hypha.aicell.io", "method_timeout": 10 })
                 async function on_init(peerConnection){
                     // connect audio / video
                     peerConnection.addEventListener('track', function (evt) {
@@ -172,16 +531,26 @@
                 );
                 // now we can access the services using the webrtc peer-to-peer connection
                 // the rpc calls will go through webrtc instead of the websocket
-                const mc = await pc.get_service("microscope-control");
+                const mc = await pc.getService("microscope-control");
                 console.log('==========microscope control=========>', mc)
                 // expose it to window so the button click can call it
                 window.microscopeControl = mc;
+                
+                // Initial position update
+                this.updatePosition();
             },
 
             stop: function() {
                 pc.close();
+                window.microscopeControl = null;
             }
         };
+
+        // Initialize the login status when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            window.methods.updateLoginStatus();
+            window.methods.updateStreamStatus(false);
+        });
     </script>
 </body>
 
