@@ -506,6 +506,23 @@
                 
                 const hostCanvas = document.createElement('canvas');
                 const service_id = document.getElementById('service-id').value;
+
+                // Fetch ICE servers
+                let iceServers = null;
+                try {
+                    const response = await fetch('https://ai.imjoy.io/public/services/coturn/get_rtc_ice_servers');
+                    if (response.ok) {
+                        iceServers = await response.json();
+                        console.log('Fetched ICE servers:', iceServers);
+                    } else {
+                        console.warn('Failed to fetch ICE servers, using fallback');
+                        iceServers = [{"urls": ["stun:stun.l.google.com:19302"]}];
+                    }
+                } catch (error) {
+                    console.error('Error fetching ICE servers:', error);
+                    iceServers = [{"urls": ["stun:stun.l.google.com:19302"]}];
+                }
+
                 async function on_init(peerConnection){
                     // connect audio / video
                     peerConnection.addEventListener('track', function (evt) {
@@ -527,7 +544,10 @@
                 pc = await hyphaWebsocketClient.getRTCService(
                     server,
                     service_id,
-                    {on_init},
+                    {
+                        on_init,
+                        ice_servers: iceServers
+                    },
                 );
                 // now we can access the services using the webrtc peer-to-peer connection
                 // the rpc calls will go through webrtc instead of the websocket
@@ -550,6 +570,33 @@
         document.addEventListener('DOMContentLoaded', function() {
             window.methods.updateLoginStatus();
             window.methods.updateStreamStatus(false);
+
+            // Add keyboard event listener for arrow keys
+            document.addEventListener('keydown', function(event) {
+                // Only handle arrow keys if we're logged in and streaming
+                if (!window.methods.isLoggedIn || !window.methods.liveRunning) return;
+
+                // Prevent default behavior for arrow keys (like scrolling)
+                if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+                    event.preventDefault();
+                }
+
+                // Handle arrow key movements
+                switch(event.key) {
+                    case 'ArrowUp':
+                        window.methods.moveRelative(0, -50);
+                        break;
+                    case 'ArrowDown':
+                        window.methods.moveRelative(0, 50);
+                        break;
+                    case 'ArrowLeft':
+                        window.methods.moveRelative(-50, 0);
+                        break;
+                    case 'ArrowRight':
+                        window.methods.moveRelative(50, 0);
+                        break;
+                }
+            });
         });
     </script>
 </body>

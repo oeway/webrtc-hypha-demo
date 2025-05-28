@@ -1,5 +1,5 @@
 fastapi>=0.104.0
-hypha-rpc>=0.20.0
+hypha-rpc>=0.20.54
 aiortc>=1.13.0
 av>=10.0.0
 numpy>=1.24.0

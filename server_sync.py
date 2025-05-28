@@ -3,6 +3,7 @@ import fractions
 import logging
 import numpy as np
 import time
+import requests
 from av import VideoFrame
 from aiortc import MediaStreamTrack
 from hypha_rpc.sync import login, connect_to_server, register_rtc_service, get_rtc_service
@@ -210,7 +211,21 @@ class VideoTransformTrack(MediaStreamTrack):
             self.running = False
             raise
 
-    
+def fetch_ice_servers():
+    """Fetch ICE servers from the coturn service"""
+    try:
+        response = requests.get('https://ai.imjoy.io/public/services/coturn/get_rtc_ice_servers')
+        if response.status_code == 200:
+            ice_servers = response.json()
+            print("Successfully fetched ICE servers:", ice_servers)
+            return ice_servers
+        else:
+            print(f"Failed to fetch ICE servers, status: {response.status_code}")
+            return None
+    except Exception as e:
+        print(f"Error fetching ICE servers: {e}")
+        return None
+
 def start_service(service_id, workspace=None):
     client_id = service_id + "-client"
     token = login({"server_url": "https://hypha.aicell.io",})
@@ -295,14 +310,18 @@ def start_service(service_id, workspace=None):
         }
     )
     
-    # ice_servers = [{"username":"1688956731:gvo9P4j7vs3Hhr6WqTUnen","credential":"yS9Vjds2jQg0qfq7xtlbwWspZQE=","urls":["turn:hypha.aicell.io:3478","stun:hypha.aicell.io:3478"]}]
+    # Fetch ICE servers
+    ice_servers = fetch_ice_servers()
+    if not ice_servers:
+        print("Using fallback ICE servers")
+        ice_servers = [{"urls": ["stun:stun.l.google.com:19302"]}]
 
     register_rtc_service(
         server,
         service_id=service_id,
         config={
             "visibility": "public",
-            # "ice_servers": ice_servers,
+            "ice_servers": ice_servers,
             "on_init": on_init,
         },
     )

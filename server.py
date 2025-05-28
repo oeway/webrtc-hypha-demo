@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import logging
 import fractions
+import aiohttp
 
 import numpy as np
 from av import VideoFrame
@@ -215,7 +216,22 @@ class VideoTransformTrack(MediaStreamTrack):
             self.running = False
             raise
 
-    
+async def fetch_ice_servers():
+    """Fetch ICE servers from the coturn service"""
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get('https://ai.imjoy.io/public/services/coturn/get_rtc_ice_servers') as response:
+                if response.status == 200:
+                    ice_servers = await response.json()
+                    print("Successfully fetched ICE servers:", ice_servers)
+                    return ice_servers
+                else:
+                    print(f"Failed to fetch ICE servers, status: {response.status}")
+                    return None
+    except Exception as e:
+        print(f"Error fetching ICE servers: {e}")
+        return None
+
 async def start_service(service_id, workspace=None, token=None):
     client_id = service_id + "-client"
     token = await login({"server_url": "https://hypha.aicell.io",})
@@ -240,8 +256,6 @@ async def start_service(service_id, workspace=None, token=None):
     
     print(f"Web app available at: https://hypha.aicell.io/{server.config.workspace}/apps/{web_app_info['id'].split(':')[1]}")
     
-    # print("Workspace: ", workspace, "Token:", await server.generate_token({"expires_in": 3600*24*100}))
-    
     async def on_init(peer_connection):
         print("WebRTC peer connection initialized on server side")
         
@@ -260,6 +274,22 @@ async def start_service(service_id, workspace=None, token=None):
             async def on_ended():
                 print(f"Client track {track.kind} ended")
                 video_track.running = False
+
+    # Fetch ICE servers
+    ice_servers = await fetch_ice_servers()
+    if not ice_servers:
+        print("Using fallback ICE servers")
+        ice_servers = [{"urls": ["stun:stun.l.google.com:19302"]}]
+
+    await register_rtc_service(
+        server,
+        service_id=service_id,
+        config={
+            "visibility": "public",
+            "ice_servers": ice_servers,
+            "on_init": on_init,
+        },
+    )
     
     def move(value, axis, is_absolute=True, is_blocking=True, context=None):
         """Move the microscope position"""
@@ -302,26 +332,6 @@ async def start_service(service_id, workspace=None, token=None):
         }
     )
     
-    # coturn = await server.get_service("coturn")
-    # ice_servers = await coturn.get_rtc_ice_servers()
-    # print("ICE servers:", ice_servers)
-    # obtain it from https://hypha.aicell.io/public/services/coturn/get_rtc_ice_servers
-    # ice_servers = [{"username":"1688956731:gvo9P4j7vs3Hhr6WqTUnen","credential":"yS9Vjds2jQg0qfq7xtlbwWspZQE=","urls":["turn:hypha.aicell.io:3478","stun:hypha.aicell.io:3478"]}]
-
-    await register_rtc_service(
-        server,
-        service_id=service_id,
-        config={
-            "visibility": "public",
-            # "ice_servers": ice_servers,
-            "on_init": on_init,
-        },
-    )
-    
-    # svc = await get_rtc_service(server, service_id)
-    # mc = await svc.get_service("microscope-control")
-    # await mc.move("left")
-
     print(
         f"Service (client_id={client_id}, service_id={service_id}) started successfully, available at https://hypha.aicell.io/{server.config.workspace}/services"
     )
