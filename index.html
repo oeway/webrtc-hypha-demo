@@ -90,6 +90,22 @@
             background: rgba(0, 0, 0, 0.8);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
+
+        /* High-quality video rendering */
+        #video {
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+            -ms-interpolation-mode: nearest-neighbor;
+            /* Prevent any browser-level compression artifacts */
+            filter: none;
+            /* Ensure no scaling artifacts */
+            object-fit: contain;
+            /* Disable any smoothing */
+            -webkit-backface-visibility: hidden;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+        }
     </style>
 </head>
 
@@ -524,21 +540,74 @@
                 }
 
                 async function on_init(peerConnection){
-                    // connect audio / video
-                    peerConnection.addEventListener('track', function (evt) {
-                        if (evt.track.kind == 'video')
-                            document.getElementById('video').srcObject = evt.streams[0];
-                        else
-                            document.getElementById('audio').srcObject = evt.streams[0];
+                    // Configure video encoding for higher quality
+                    const transceivers = peerConnection.getTransceivers();
+                    transceivers.forEach(transceiver => {
+                        if (transceiver.sender && transceiver.sender.track && transceiver.sender.track.kind === 'video') {
+                            const parameters = transceiver.sender.getParameters();
+                            if (parameters && parameters.encodings) {
+                                parameters.encodings.forEach(encoding => {
+                                    // Set higher bitrate for better quality
+                                    encoding.maxBitrate = 2000000; // 2 Mbps
+                                    encoding.minBitrate = 1000000; // 1 Mbps
+                                    // Maintain resolution over framerate
+                                    encoding.degradationPreference = 'maintain-resolution';
+                                    // No downscaling
+                                    encoding.scaleResolutionDownBy = 1.0;
+                                });
+                                transceiver.sender.setParameters(parameters).catch(e => {
+                                    console.warn('Could not set encoding parameters:', e);
+                                });
+                            }
+                        }
                     });
 
-                    const frameRate = 20;
+                    // connect audio / video
+                    peerConnection.addEventListener('track', function (evt) {
+                        if (evt.track.kind == 'video') {
+                            const video = document.getElementById('video');
+                            video.srcObject = evt.streams[0];
+                            
+                            // Configure video element for best quality
+                            video.setAttribute('playsinline', 'true');
+                            video.setAttribute('autoplay', 'true');
+                            video.style.imageRendering = 'crisp-edges'; // Prevent browser smoothing
+                        } else {
+                            document.getElementById('audio').srcObject = evt.streams[0];
+                        }
+                    });
+
+                    const frameRate = 30; // Keep same FPS
                     // need to call getContext for Firefox: https://bugzilla.mozilla.org/show_bug.cgi?id=1572422
                     const context = hostCanvas.getContext('2d');
+                    
+                    // Configure canvas for higher quality
+                    hostCanvas.width = 480;  // Keep same size
+                    hostCanvas.height = 360; // Keep same size
+                    
+                    // Configure context for better quality rendering
+                    context.imageSmoothingEnabled = false; // Disable smoothing for crisp pixels
+                    context.imageSmoothingQuality = 'high';
+                    
                     const stream = hostCanvas.captureStream(frameRate);
+                    
+                    // Configure video tracks for higher quality
                     for(let track of stream.getVideoTracks()){
+                        // Apply constraints for higher quality
+                        await track.applyConstraints({
+                            width: { exact: 480 },
+                            height: { exact: 360 },
+                            frameRate: { exact: 30 },
+                            // Request higher quality encoding
+                            advanced: [{
+                                width: 480,
+                                height: 360,
+                                frameRate: 30
+                            }]
+                        }).catch(e => console.warn('Could not apply track constraints:', e));
+                        
                         await peerConnection.addTrack(track, stream);
-                    };
+                    }
                 }
                 
                 pc = await hyphaWebsocketClient.getRTCService(
@@ -546,7 +615,14 @@
                     service_id,
                     {
                         on_init,
-                        ice_servers: iceServers
+                        ice_servers: iceServers,
+                        // Add RTC configuration for higher quality
+                        rtc_config: {
+                            bundlePolicy: 'max-bundle',
+                            iceCandidatePoolSize: 10,
+                            // Enable higher bandwidth
+                            iceTransportPolicy: 'all'
+                        }
                     },
                 );
                 // now we can access the services using the webrtc peer-to-peer connection
